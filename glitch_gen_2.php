@@ -12,7 +12,7 @@ require('gen_functions.php');
 
 //Determine what mode we'll be in
 //$mode           = array_rand([Modes::NES, Modes::GB, Modes::SNES]);
-$mode       = Modes::GB;
+$mode       = Modes::SNES;
 
 //Grab the image we'll be working with
 if ($mode == Modes::SNES)
@@ -77,21 +77,37 @@ if ($mode == Modes::NES)
             $nes_pal_assign[$x][$y]     = $palettes['bg'.random_int(0, 3)];
 }
 
-//Fill in the background layer with tiles
-//Temporarily force this to true, will load Nova levels later
-if (false)
+//Load a Nova level
+$level_data         = nova_level_convert();
+
+//Figure out where we'll position the Nova level
+$v_align        = -32 + ($level_data['Height'] >> 2) + random_int(-6, 6);
+$offset_x       = -random_int(-8, max($level_data['Width'] - 64 + 8, -8));
+$offset_y       = -random_int($v_align, max($level_data['Height'] - 64 + 8, $v_align));
+
+$norm_min_x     = 0;
+$norm_min_y     = 0;
+$norm_max_x     = $level_data['Width'];
+$norm_max_y     = $level_data['Height'];
+
+//Go over the tiles and draw them
+foreach ($level_data as $id => $level)
 {
-    //Randomly spam tiles to the background layer
-    for ($x_cell = 0; $x_cell < 512; $x_cell += 8)
+    //Skip this if this isn't a level
+    if (!is_array($level))
+        continue;
+    
+    //Go over the data and draw each tile to the surface
+    for ($x_cell = 0; $x_cell < 64; $x_cell++)
     {
-        for ($y_cell = 0; $y_cell < 512; $y_cell += 8)
+        for ($y_cell = 0; $y_cell < 64; $y_cell++)
         {
             //Pick a palette
             switch ($mode)
             {
                 case Modes::NES:
                 {
-                    $pal        = $nes_pal_assign[$x_cell >> 4][$y_cell >> 4];
+                    $pal        = $nes_pal_assign[$x_cell >> 2][$y_cell >> 2];
                     break;
                 }
                 case Modes::SNES:
@@ -105,60 +121,29 @@ if (false)
                     break;
                 }
             }
-            copy_to_surface($surface, $bg_chr, $pal, $x_cell, $y_cell);
-        }
-    }
-}
-else
-{
-    //Load a Nova level
-    $level_data         = nova_level_convert('nova_levels/intro_a.json');
 
-    //Go over the tiles and draw them
-    foreach ($level_data as $level)
-    {
-        //Skip this if this isn't a level
-        if (!is_array($level))
-            continue;
-        
-        //Go over the data and draw each tile to the surface
-        $offset_x       = 0;
-        $offset_y       = 0;
-        $base_x         = max($offset_x, 0);
-        $base_y         = max($offset_y, 0);
-        $max_x          = min(64, $level_data['Width']);
-        $max_y          = min(64, $level_data['Height']);
+            $norm_x         = $x_cell - $offset_x;
+            $norm_y         = $y_cell - $offset_y;
 
-        for ($x_cell = $base_x; $x_cell < $max_x; $x_cell++)
-        {
-            for ($y_cell = $base_y; $y_cell < $max_y; $y_cell++)
+            //Draw a Nova tile? If not, draw a random tile?
+            $rand_tile      = true;
+            if (key_exists($norm_x, $level))
             {
-                if (key_exists($x_cell, $level))
+                if (key_exists($norm_y, $level[$norm_x]))
                 {
-                    if (key_exists($y_cell, $level[$x_cell]))
-                    {
-                        //Pick a palette
-                        switch ($mode)
-                        {
-                            case Modes::NES:
-                            {
-                                $pal        = $nes_pal_assign[$x_cell >> 4][$y_cell >> 4];
-                                break;
-                            }
-                            case Modes::SNES:
-                            {
-                                $pal        = $palettes['bg'.random_int(0, 15)];
-                                break;
-                            }
-                            case Modes::GB:
-                            {
-                                $pal        = $palettes['pal0'];
-                                break;
-                            }
-                        }
-                        copy_to_surface($surface, $bg_chr, $pal, $x_cell * 8, $y_cell * 8, $level[$x_cell][$y_cell]);
-                    }
+                    $rand_tile      = false;
+                    $tile_id        = $level[$norm_x][$norm_y];
+
+                    //Pick a more consistent color for this?
+                    if ($mode == Modes::SNES)
+                        $pal        = $palettes['bg'.($tile_id % 16)];
+
+                    copy_to_surface($surface, $bg_chr, $pal, $x_cell * 8, $y_cell * 8, $tile_id);
                 }
+            }
+            else if (!point_in_rectangle($norm_x, $norm_y, $norm_min_x, $norm_min_y, $norm_max_x, $norm_max_y) && $id == 'bg' && $rand_tile)
+            {
+                copy_to_surface($surface, $bg_chr, $pal, $x_cell * 8, $y_cell * 8);
             }
         }
     }

@@ -12,6 +12,11 @@ abstract class Modes {
     const SNES      = 2;
 }
 
+function point_in_rectangle($x, $y, $min_x, $min_y, $max_x, $max_y)
+{
+    return ($x <= $max_x && $x >= $min_x && $y <= $max_y && $y >= $min_y);
+}
+
 function allocate_palette($image, $mode)
 {
     //Allocate our palette to the image. In the event that the color is NULL, color is not drawn.
@@ -124,10 +129,16 @@ function copy_to_surface($surface, $bg_chr, $pal, $x_dst, $y_dst, $tile_id = nul
     }
 }
 
-function nova_level_convert($path)
+function nova_level_convert()
 {
+    //Pick a random level
+    $files 				= scandir('nova_levels');
+    $filepath			= '';
+    while (strpos($filepath, '.json') === false)
+        $filepath			= $files[array_rand($files)];
+
     //Converts a Nova the Squirrel level to an array of tiles we can read from
-    $level_json         = json_decode(file_get_contents($path), true) or die('Could not read Nova level!');
+    $level_json         = json_decode(file_get_contents("nova_levels/$filepath"), true) or die("Could not read Nova level! Attempted to read $filepath");
 
     //Figure out the dimensions of our level data (in 8x8 tiles)
     $tile_mult_x    = ceil($level_json['Meta']['TileWidth'] / 8);
