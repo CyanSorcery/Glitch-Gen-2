@@ -64,6 +64,8 @@ $palettes       = allocate_palette($surface, $mode);
 //Fill in the background color?
 if ($mode == Modes::NES || $mode == Modes::SNES)
     imagefilledrectangle($surface, 0, 0, 512, 512, $palettes['bg']);
+else if ($mode == Modes::GB)
+    imagefilledrectangle($surface, 0, 0, 512, 512, $palettes['pal0'][3]);
 
 //If this is the NES mode, we need to make an array of palettes that match the 2x2 nature of the NES palette assignment
 if ($mode == Modes::NES)
@@ -77,7 +79,7 @@ if ($mode == Modes::NES)
 
 //Fill in the background layer with tiles
 //Temporarily force this to true, will load Nova levels later
-if (true)
+if (false)
 {
     //Randomly spam tiles to the background layer
     for ($x_cell = 0; $x_cell < 512; $x_cell += 8)
@@ -104,6 +106,60 @@ if (true)
                 }
             }
             copy_to_surface($surface, $bg_chr, $pal, $x_cell, $y_cell);
+        }
+    }
+}
+else
+{
+    //Load a Nova level
+    $level_data         = nova_level_convert('nova_levels/intro_a.json');
+
+    //Go over the tiles and draw them
+    foreach ($level_data as $level)
+    {
+        //Skip this if this isn't a level
+        if (!is_array($level))
+            continue;
+        
+        //Go over the data and draw each tile to the surface
+        $offset_x       = 0;
+        $offset_y       = 0;
+        $base_x         = max($offset_x, 0);
+        $base_y         = max($offset_y, 0);
+        $max_x          = min(64, $level_data['Width']);
+        $max_y          = min(64, $level_data['Height']);
+
+        for ($x_cell = $base_x; $x_cell < $max_x; $x_cell++)
+        {
+            for ($y_cell = $base_y; $y_cell < $max_y; $y_cell++)
+            {
+                if (key_exists($x_cell, $level))
+                {
+                    if (key_exists($y_cell, $level[$x_cell]))
+                    {
+                        //Pick a palette
+                        switch ($mode)
+                        {
+                            case Modes::NES:
+                            {
+                                $pal        = $nes_pal_assign[$x_cell >> 4][$y_cell >> 4];
+                                break;
+                            }
+                            case Modes::SNES:
+                            {
+                                $pal        = $palettes['bg'.random_int(0, 15)];
+                                break;
+                            }
+                            case Modes::GB:
+                            {
+                                $pal        = $palettes['pal0'];
+                                break;
+                            }
+                        }
+                        copy_to_surface($surface, $bg_chr, $pal, $x_cell * 8, $y_cell * 8, $level[$x_cell][$y_cell]);
+                    }
+                }
+            }
         }
     }
 }

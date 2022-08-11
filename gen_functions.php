@@ -99,13 +99,16 @@ function allocate_palette($image, $mode)
     return $fin_colors;
 }
 
-function copy_to_surface($surface, $bg_chr, $pal, $x_dst, $y_dst)
+function copy_to_surface($surface, $bg_chr, $pal, $x_dst, $y_dst, $tile_id = null)
 {
     //This copies tiles from the background tileset to the surface, applying the palette and any transformation
 
+    if ($tile_id == null)
+        $tile_id        = random_int(0, 255);
+
     //First, figure out the source position
-    $x_src      = random_int(0, 15) * 8;
-    $y_src      = random_int(0, 15) * 8;
+    $x_src      = ($tile_id % 16) * 8;
+    $y_src      = floor($tile_id / 16) * 8;
 
     for ($x = 0; $x < 8; $x++)
     {
@@ -119,6 +122,91 @@ function copy_to_surface($surface, $bg_chr, $pal, $x_dst, $y_dst)
                 imagesetpixel($surface, $x_dst + $x, $y_dst + $y, $col_at);
         }
     }
+}
+
+function nova_level_convert($path)
+{
+    //Converts a Nova the Squirrel level to an array of tiles we can read from
+    $level_json         = json_decode(file_get_contents($path), true) or die('Could not read Nova level!');
+
+    //Figure out the dimensions of our level data (in 8x8 tiles)
+    $tile_mult_x    = ceil($level_json['Meta']['TileWidth'] / 8);
+    $tile_mult_y    = ceil($level_json['Meta']['TileHeight'] / 8);
+    $level_w        = $level_json['Meta']['Width'] * $tile_mult_x;
+    $level_h        = $level_json['Meta']['Height'] * $tile_mult_y;
+
+    //Set up our level data array. Tiles that aren't used wont be specified
+    $level_data     = [
+        'fg'        => [],
+        'bg'        => [],
+        'spr'       => [],
+        'Width'     => $level_w,
+        'Height'    => $level_h
+    ];
+    
+    $level_data['Width']        = $level_w;
+    $level_data['Height']       = $level_h;
+    
+    //For holding the tile IDs of each type of entity
+    $tile_ids       = [
+        'fg' => [],
+        'bg' => [],
+        'spr' => []
+    ];
+    
+    //Go through the level data and assign it to our grid
+    foreach ($level_json['Layers'] as $layer)
+    {
+        switch ($layer['Name'])
+        {
+            case 'Foreground':
+            {
+                $key        = 'fg';
+                break;
+            }
+            case 'Sprites':
+            {
+                $key        = 'spr';
+                break;
+            }
+            //Not a supported layer so skip it
+            default:
+                continue;
+        }
+
+        //Go through the data and assign it to our grid
+        foreach ($layer['Data'] as $entity)
+        {
+            //Is this entity in our tile table? If so, look it up
+            if (key_exists($entity['Id'], $tile_ids[$key]))
+                $tile_data      = $tile_ids[$key][$entity['Id']];
+            else
+            {
+                $tile_data      = [];
+                for ($x = 0; $x < $tile_mult_x; $x++)
+                    for ($y = 0; $y < $tile_mult_y; $y++)
+                        $tile_data[$x][$y]      = random_int(1, 255);
+
+                $tile_ids[$key][$entity['Id']]    = $tile_data;
+            }
+
+            //Figure out where we're putting this in our data array
+            $base_x     = $entity['X'] * $tile_mult_x;
+            $base_y     = $entity['Y'] * $tile_mult_y;
+            $e_max_x    = $base_x + ($entity['W'] * $tile_mult_x);
+            $e_max_y    = $base_y + ($entity['H'] * $tile_mult_y);
+
+            //Finally, put it in
+            for ($x_cell = $base_x; $x_cell < $e_max_x; $x_cell += $tile_mult_x)
+                for ($y_cell = $base_y; $y_cell < $e_max_y; $y_cell += $tile_mult_y)
+                    for ($x = 0; $x < $tile_mult_x; $x++)
+                        for ($y = 0; $y < $tile_mult_y; $y++)
+                            $level_data[$key][$x_cell + $x][$y_cell + $y]   = $tile_data[$x][$y];
+        }
+    }
+
+    //Return the level data
+    return $level_data;
 }
 
 ?>
