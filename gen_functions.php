@@ -429,7 +429,13 @@ function get_background_pattern()
 
 function image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset, $res_w, $res_h)
 {
-    $effect         = 5;
+    //Random chance to have no effect, or force no effect on NES
+    if (random_int(0, 10) < 4 || $mode == Modes::NES)
+        $effect         = 0;
+    else if ($mode == Modes::GB)
+        $effect         = random_int(0, 2);
+    else
+        $effect         = random_int(0, 7);
 
     //Notes: Some of the effects are achieveable on Gameboy, some or not. Keep those at the top of
     //the switch statement so we can reuse code.
@@ -534,6 +540,70 @@ function image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset,
 
                 imagecopyresized($display, $surface, 0, $scanline, $x_offset - ($res_w * 0.5) * $scale, $y_offset + $scanline, $res_w, 1, $res_w * $scale, 1);
             }
+
+            break;
+        }
+        
+
+        //Simple rotation
+        case 6:
+        {
+            //Create a temporary rotated image to sample from
+            $rot_img        = imagerotate($surface, random_int(0, 360), 0);
+            $rot_w          = imagesx($rot_img);
+            $rot_h          = imagesy($rot_img);
+            //Fix the center point to prevent out of bounds drawing
+            $x_offset           = ($rot_w * 0.5) - ($res_w * 0.5);
+            $y_offset           = ($rot_h * 0.5) - ($res_h * 0.5);
+
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+            {
+                    imagecopy($display, $rot_img, 0, $scanline, $x_offset, $y_offset + $scanline, $res_w, 1);
+            }
+
+            //Get rid of the rotated image
+            unset($rot_img);
+
+            break;
+        }
+
+        //Psuedo Mode 7 floor
+        case 7:
+        {
+            //Point at which the mode 7 starts, with a chance it'll just fill the whole screen
+            $trans_start   = $y_offset + random_int(-16, $res_h * 0.75);
+
+            //The top and bottom scale factor
+            $bottom_scale         = (1 + (random_int(-100, 100) / 100)) * 0.5;
+            //The center scale factor
+            $top_scale       = (1 + (random_int(-100, 100) / 100)) * 0.5;
+
+            //Create a temporary rotated image to sample from
+            $rot_img        = imagerotate($surface, random_int(0, 360), 0);
+            $rot_w          = imagesx($rot_img);
+            $rot_h          = imagesy($rot_img);
+
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+            {
+                if ($scanline > $trans_start)
+                {
+                    //Fix the center point to prevent out of bounds drawing
+                    $x_offset           = ($rot_w * 0.5) - ($res_w * 0.5);
+                    $y_offset           = ($rot_h * 0.5) - ($res_h * 0.5);
+
+                    $scale_factor   = ($scanline - $trans_start) / ($res_h - $trans_start);
+
+                    //Figure out the scale factor
+                    $scale          = lerp($bottom_scale, $top_scale, $scale_factor);
+
+                    imagecopyresized($display, $rot_img, 0, $scanline, $x_offset - ($res_w * 0.5) * $scale, $y_offset + $scanline, $res_w, 1, max(1, min(512, $res_w * $scale)), 1);
+                }
+                else
+                    imagecopy($display, $surface, 0, $scanline, $x_offset, $y_offset + $scanline, $res_w, 1);
+            }
+
+            //Get rid of the rotated image
+            unset($rot_img);
 
             break;
         }
