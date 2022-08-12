@@ -422,4 +422,94 @@ function get_background_pattern()
     }
 }
 
+function image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset, $res_w, $res_h)
+{
+    $effect         = 4;
+
+    //Notes: Some of the effects are achieveable on Gameboy, some or not. Keep those at the top of
+    //the switch statement so we can reuse code.
+
+    switch ($effect)
+    {
+        //Just a straight copy, nothing fancy
+        case 0:
+        {
+            imagecopy($display, $surface, 0, 0, $x_offset, $y_offset, $res_w, $res_h);
+            break;
+        }
+
+        //Water sine wave effect
+        case 1:
+        {
+            //Figure out the strength of each step as well as the overall strength of the wave
+            $wave_w         = random_int(1, 16);
+            $wave_inc       = M_PI / random_int(3, 32);
+            //Point at which the wave will start, allowing for a good chance that it'll fill the whole screen
+            $wave_y_start   = $y_offset + random_int(-32, $res_h);
+
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+            {
+                if ($scanline > $wave_y_start)
+                    imagecopy($display, $surface, 0, $scanline, $x_offset + ($wave_w * sin($wave_inc * $scanline)), $y_offset + $scanline, $res_w, 1);
+                else
+                    imagecopy($display, $surface, 0, $scanline, $x_offset, $y_offset + $scanline, $res_w, 1);
+            }
+
+            break;
+        }
+
+        //Dual opposing sine waves
+        case 2:
+        {
+            //Figure out the strength of each step as well as the overall strength of the wave
+            $wave_w         = random_int(1, 16);
+            $wave_inc       = M_PI / random_int(3, 32);
+            //Point at which the wave will start, allowing for a good chance that it'll fill the whole screen
+            $wave_y_start   = $y_offset + random_int(-32, $res_h);
+
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+            {
+                if ($scanline > $wave_y_start)
+                    imagecopy($display, $surface, 0, $scanline, $x_offset + floor($wave_w * sin($wave_inc * $scanline) * ($scanline % 2 == 1 ? 1 : -1)), $y_offset + $scanline, $res_w, 1);
+                else
+                    imagecopy($display, $surface, 0, $scanline, $x_offset, $y_offset + $scanline, $res_w, 1);
+            }
+
+            break;
+        }
+
+        //Up and down sine
+        case 3:
+        {
+            //Figure out the strength of each step as well as the overall strength of the wave
+            $wave_w         = random_int(4, 16);
+            $wave_inc       = M_PI / random_int(16, 32);
+
+            //This one will always cover the entire screen
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+                imagecopy($display, $surface, 0, $scanline, $x_offset, $y_offset + $scanline + floor($wave_w * sin($wave_inc * $scanline)), $res_w, 1);
+
+            break;
+        }
+
+        //Mosaic
+        case 4:
+        {
+            $block_size     = random_int(2, 16);
+
+            for ($x_cell = 0; $x_cell < $res_w; $x_cell += $block_size)
+            {
+                for ($y_cell = 0; $y_cell < $res_h; $y_cell += $block_size)
+                {
+                    $col_arr    = imagecolorsforindex($surface, imagecolorat($surface, $x_offset + $x_cell, $y_offset + $y_cell));
+                    $col        = imagecolorallocate($display, $col_arr['red'], $col_arr['green'], $col_arr['blue']);
+                    imagefilledrectangle($display, $x_cell, $y_cell, $x_cell + $block_size, $y_cell + $block_size, $col);
+                    imagecolordeallocate($display, $col);
+                }
+            }
+            break;
+        }
+    }
+}
+
 ?>

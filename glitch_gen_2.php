@@ -12,7 +12,7 @@ require('gen_functions.php');
 
 //Determine what mode we'll be in
 //$mode           = array_rand([Modes::NES, Modes::GB, Modes::SNES]);
-$mode       = Modes::NES;
+$mode       = Modes::SNES;
 
 //Grab the image we'll be working with
 if ($mode == Modes::SNES)
@@ -211,7 +211,8 @@ imagealphablending($display, false);
 $x_offset       = random_int(32, 512 - $res_w - 32);
 $y_offset       = min(max($v_align + random_int(-32, 32), 32), 512 - $res_h + 32);
 
-imagecopy($display, $surface, 0, 0, $x_offset, $y_offset, $res_w, $res_h);
+//Copy with potential effect
+image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset, $res_w, $res_h);
 
 //Tmp write the big surface to disk
 imagepng($surface, 'surf.png');
