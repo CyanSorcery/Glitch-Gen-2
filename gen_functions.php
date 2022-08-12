@@ -447,7 +447,7 @@ function nova_level_convert()
             }
             //Not a supported layer so skip it
             default:
-                continue;
+                continue 2;
         }
 
         //Go through the data and assign it to our grid
