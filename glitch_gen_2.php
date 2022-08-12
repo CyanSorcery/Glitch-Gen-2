@@ -12,7 +12,7 @@ require('gen_functions.php');
 
 //Determine what mode we'll be in
 //$mode           = array_rand([Modes::NES, Modes::GB, Modes::SNES]);
-$mode       = Modes::GB;
+$mode       = Modes::NES;
 
 //Grab the image we'll be working with
 if ($mode == Modes::SNES)
@@ -90,19 +90,33 @@ $norm_min_y     = 0;
 $norm_max_x     = $level_data['Width'];
 $norm_max_y     = $level_data['Height'];
 
-//Draw a background?
-if ($mode == Modes::SNES)
+//Draw a background? Allow for chance of no background, unless it's SNES
+if (random_int(0, 10) < 4 || $mode == Modes::SNES)
 {
-    $offset_x       = random_int(0, 7);
-    $offset_y       = random_int(0, 7);
+    $offset_x       = 0;
+    $offset_y       = 0;
+    
+    if ($mode == Modes::SNES)
+    {
+        $offset_x       = random_int(0, 7);
+        $offset_y       = random_int(0, 7);
+    }
     $pattern        = get_background_pattern();
+    
+    if ($mode == Modes::GB)
+        $pal        = $palettes['pal0'];
 
     for ($x_cell = 0; $x_cell < 64; $x_cell++)
         for ($y_cell = 0; $y_cell < 64; $y_cell++)
         {
             //Note: X and Y are swapped here to make adding patterns easier
             $tile_id        = $pattern[$y_cell % 4][$x_cell % 4];
-            $pal            = $palettes['bg'.($tile_id % 16)];
+
+            if ($mode == Modes::SNES)
+                $pal            = $palettes['bg'.($tile_id % 16)];
+            else if ($mode == Modes::NES)
+                $pal            = $palettes['bg'.($tile_id % 4)];
+
             copy_to_surface($surface, $bg_chr, $pal, $offset_x + ($x_cell * 8), $offset_y + ($y_cell * 8), $tile_id);
         }
 }
@@ -195,9 +209,12 @@ imagealphablending($display, false);
 
 //Copy to the screen (keep it aligned vertically)
 $x_offset       = random_int(32, 512 - $res_w - 32);
-$y_offset       = min(max($v_align + random_int(-32, 32), 32), 512 - $res_h - 32);
+$y_offset       = min(max($v_align + random_int(-32, 32), 32), 512 - $res_h + 32);
 
 imagecopy($display, $surface, 0, 0, $x_offset, $y_offset, $res_w, $res_h);
+
+//Tmp write the big surface to disk
+imagepng($surface, 'surf.png');
 
 //Get rid of the surface (we don't need it now)
 unset($surface);
