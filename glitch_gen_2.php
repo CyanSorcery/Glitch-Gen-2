@@ -12,7 +12,7 @@ require('gen_functions.php');
 
 //Determine what mode we'll be in
 //$mode           = array_rand([Modes::NES, Modes::GB, Modes::SNES]);
-$mode       = Modes::SNES;
+$mode       = Modes::GB;
 
 //Grab the image we'll be working with
 if ($mode == Modes::SNES)
@@ -166,7 +166,43 @@ foreach ($level_data as $id => $level)
     }
 }
 
+//Now that we've got an image generated, let's grab a chunk of it for our screen
+switch ($mode)
+{
+    case Modes::SNES:
+    {
+        $res_w      = 256;
+        $res_h      = 224;
+        break;
+    }
+    case Modes::NES:
+    {
+        $res_w      = 256;
+        $res_h      = 240;
+        break;
+    }
+    case Modes::GB:
+    {
+        $res_w      = 160;
+        $res_h      = 144;
+        break;
+    }
+}
+
+//Create our "display"
+$display        = imagecreatetruecolor($res_w, $res_h);
+imagealphablending($display, false);
+
+//Copy to the screen (keep it aligned vertically)
+$x_offset       = random_int(32, 512 - $res_w - 32);
+$y_offset       = min(max($v_align + random_int(-32, 32), 32), 512 - $res_h - 32);
+
+imagecopy($display, $surface, 0, 0, $x_offset, $y_offset, $res_w, $res_h);
+
+//Get rid of the surface (we don't need it now)
+unset($surface);
+
 //Temp write the surface to disk
-imagepng($surface, 'tmp.png');
+imagepng($display, 'tmp.png');
 
 ?>

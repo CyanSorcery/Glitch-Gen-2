@@ -201,6 +201,12 @@ function nova_level_convert()
                 $tile_ids[$key][$entity['Id']]    = $tile_data;
             }
 
+            if (!isset($entity['W']))
+                $entity['W']    = 1;
+                
+            if (!isset($entity['H']))
+                $entity['H']    = 1;
+
             //Figure out where we're putting this in our data array
             $base_x     = $entity['X'] * $tile_mult_x;
             $base_y     = $entity['Y'] * $tile_mult_y;
