@@ -90,6 +90,23 @@ $norm_min_y     = 0;
 $norm_max_x     = $level_data['Width'];
 $norm_max_y     = $level_data['Height'];
 
+//Draw a background?
+if ($mode == Modes::SNES)
+{
+    $offset_x       = random_int(0, 7);
+    $offset_y       = random_int(0, 7);
+    $pattern        = get_background_pattern();
+
+    for ($x_cell = 0; $x_cell < 64; $x_cell++)
+        for ($y_cell = 0; $y_cell < 64; $y_cell++)
+        {
+            //Note: X and Y are swapped here to make adding patterns easier
+            $tile_id        = $pattern[$y_cell % 4][$x_cell % 4];
+            $pal            = $palettes['bg'.($tile_id % 16)];
+            copy_to_surface($surface, $bg_chr, $pal, $offset_x + ($x_cell * 8), $offset_y + ($y_cell * 8), $tile_id);
+        }
+}
+
 //Go over the tiles and draw them
 foreach ($level_data as $id => $level)
 {

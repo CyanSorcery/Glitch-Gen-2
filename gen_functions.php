@@ -220,4 +220,200 @@ function nova_level_convert()
     return $level_data;
 }
 
+function get_background_pattern()
+{
+    //Get a random background pattern to use for the background layer.
+    //tmp
+    $pattern        = random_int(0, 18);
+
+    $tile_1         = random_int(0, 255);
+    $tile_2         = random_int(0, 255);
+
+    //Just do a random but repeating pattern?
+    if (mt_rand(0, 10) < 3)
+    {
+        //Prep the array
+        $tiles          = array_flip([$tile_1, $tile_2]);
+        return [
+            [array_rand($tiles), array_rand($tiles), array_rand($tiles), array_rand($tiles)],
+            [array_rand($tiles), array_rand($tiles), array_rand($tiles), array_rand($tiles)],
+            [array_rand($tiles), array_rand($tiles), array_rand($tiles), array_rand($tiles)],
+            [array_rand($tiles), array_rand($tiles), array_rand($tiles), array_rand($tiles)]
+        ];
+    }
+
+    switch ($pattern)
+    {
+        //Simple background
+        case 0:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1]
+            ];
+        
+        //Vertical stripes
+        case 1:
+            return [
+                [$tile_1, $tile_2, $tile_1, $tile_2],
+                [$tile_1, $tile_2, $tile_1, $tile_2],
+                [$tile_1, $tile_2, $tile_1, $tile_2],
+                [$tile_1, $tile_2, $tile_1, $tile_2]
+            ];
+        //Vertical stripes (big)
+        case 2:
+            return [
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_2]
+            ];
+        
+        //Horizontal stripes
+        case 3:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_2, $tile_2, $tile_2, $tile_2],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_2, $tile_2, $tile_2, $tile_2]
+            ];
+
+        //Horizontal stripes (big)
+        case 4:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_2, $tile_2, $tile_2, $tile_2],
+                [$tile_2, $tile_2, $tile_2, $tile_2]
+            ];
+        
+        //Small vertical stripe
+        case 5:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_1, $tile_2]
+            ];
+        
+        //Small horizontal stripe
+        case 6:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_2, $tile_2, $tile_2, $tile_2]
+            ];
+        
+        //Checkerboard
+        case 7:
+            return [
+                [$tile_2, $tile_2, $tile_1, $tile_1],
+                [$tile_2, $tile_2, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_2]
+            ];
+        
+        //Diagonal lines this way /
+        case 8:
+            return [
+                [$tile_1, $tile_2, $tile_2, $tile_1],
+                [$tile_2, $tile_2, $tile_1, $tile_1],
+                [$tile_2, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_2]
+            ];
+        
+        //Diagonal lines this way \
+        case 9:
+            return [
+                [$tile_1, $tile_2, $tile_2, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_2, $tile_1, $tile_1, $tile_2],
+                [$tile_2, $tile_2, $tile_1, $tile_1]
+            ];
+        
+        //Diagonal line small this way /
+        case 10:
+            return [
+                [$tile_1, $tile_2, $tile_1, $tile_1],
+                [$tile_2, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_1]
+            ];
+        
+        //Diagonal line small this way \
+        case 11:
+            return [
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_2, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_2, $tile_1, $tile_1]
+            ];
+        
+        //Filled Circles
+        case 12:
+            return [
+                [$tile_1, $tile_2, $tile_2, $tile_1],
+                [$tile_2, $tile_2, $tile_2, $tile_2],
+                [$tile_2, $tile_2, $tile_2, $tile_2],
+                [$tile_1, $tile_2, $tile_2, $tile_1]
+            ];
+        
+        //Decorative
+        case 13:
+            return [
+                [$tile_2, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_2, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_2, $tile_1, $tile_1, $tile_2]
+            ];
+        
+        //Decorative 2
+        case 14:
+            return [
+                [$tile_2, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_1, $tile_2, $tile_1, $tile_1],
+                [$tile_2, $tile_1, $tile_1, $tile_2]
+            ];
+
+        //Zigzags (vertical)
+        case 15:
+            return [
+                [$tile_1, $tile_2, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_1, $tile_1, $tile_1, $tile_2],
+                [$tile_1, $tile_1, $tile_2, $tile_1]
+            ];
+        
+        //Zigzags (horizontal)
+        case 16:
+            return [
+                [$tile_1, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_1, $tile_2, $tile_1, $tile_2],
+                [$tile_2, $tile_1, $tile_1, $tile_1]
+            ];
+        
+        //Zigzags thick (vertical)
+        case 17:
+            return [
+                [$tile_2, $tile_2, $tile_1, $tile_1],
+                [$tile_1, $tile_2, $tile_2, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_2],
+                [$tile_1, $tile_2, $tile_2, $tile_1]
+            ];
+        
+        //Zigzags thick (horizontal)
+        case 18:
+            return [
+                [$tile_2, $tile_1, $tile_1, $tile_1],
+                [$tile_1, $tile_1, $tile_2, $tile_1],
+                [$tile_1, $tile_2, $tile_2, $tile_2],
+                [$tile_2, $tile_2, $tile_1, $tile_2]
+            ];
+    }
+}
+
 ?>
