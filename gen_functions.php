@@ -12,6 +12,11 @@ abstract class Modes {
     const SNES      = 2;
 }
 
+function lerp($x1, $x2, $t)
+{
+    return $x1 + ($x2 - $x1) * $t;
+}
+
 function point_in_rectangle($x, $y, $min_x, $min_y, $max_x, $max_y)
 {
     return ($x <= $max_x && $x >= $min_x && $y <= $max_y && $y >= $min_y);
@@ -424,7 +429,7 @@ function get_background_pattern()
 
 function image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset, $res_w, $res_h)
 {
-    $effect         = 4;
+    $effect         = 5;
 
     //Notes: Some of the effects are achieveable on Gameboy, some or not. Keep those at the top of
     //the switch statement so we can reuse code.
@@ -507,6 +512,29 @@ function image_copy_with_effect($mode, $display, $surface, $x_offset, $y_offset,
                     imagecolordeallocate($display, $col);
                 }
             }
+            break;
+        }
+
+        //Cylinder
+        case 5:
+        {
+            //Fix the center point to prevent out of bounds drawing
+            $x_offset           = 256 - ($res_w * 0.5);
+
+            //The top and bottom scale factor
+            $edge_scale         = (1 + (random_int(-100, 100) / 100)) * 0.5;
+            //The center scale factor
+            $center_scale       = (1 + (random_int(-100, 100) / 100)) * 0.5;
+
+            //This one will always cover the entire screen
+            for ($scanline = 0; $scanline < $res_h; $scanline++)
+            {
+                //Figure out the scale factor
+                $scale          = lerp($edge_scale, $center_scale, sin(M_PI * 0.5 * abs((($scanline / $res_h) * 2) - 1)));
+
+                imagecopyresized($display, $surface, 0, $scanline, $x_offset - ($res_w * 0.5) * $scale, $y_offset + $scanline, $res_w, 1, $res_w * $scale, 1);
+            }
+
             break;
         }
     }
